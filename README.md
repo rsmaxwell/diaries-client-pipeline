@@ -1,0 +1,1 @@
+# diaries-client-pipeline
