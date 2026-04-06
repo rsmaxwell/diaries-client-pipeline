@@ -70,6 +70,10 @@ pipeline {
         container('node') {
           dir('project/diaries-client') {
             echo 'build the Angular Webapp'
+
+            sh('pwd')
+            sh('ls -al')
+
             sh('./scripts/build.sh')
           }
         }
