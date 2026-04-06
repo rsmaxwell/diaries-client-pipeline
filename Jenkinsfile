@@ -73,7 +73,6 @@ pipeline {
 
             sh('pwd')
             sh('ls -al')
-            sh('tree -L 2')
             sh('find . -maxdepth 2 -type f | sort | head -200')
 
             sh('./scripts/build.sh')
