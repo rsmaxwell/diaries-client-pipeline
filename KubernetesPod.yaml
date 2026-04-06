@@ -1,0 +1,108 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+
+  containers:
+
+  - name: tools
+    image: rsmaxwell/tools:latest
+    command:
+    - cat
+    tty: true
+
+  - name: gcc
+    image: gcc:11
+    command:
+    - cat
+    tty: true
+
+  - name: golang
+    image: golang:bookworm
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - mountPath: /go/pkg
+      name: golang-data
+
+  - name: maven
+    image: maven:3.9.12-eclipse-temurin-25-noble
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - mountPath: /root/.m2
+      name: maven-data
+
+  - name: gradle
+    image: rsmaxwell/gradle:latest
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - mountPath: /home/gradle
+      name: gradle-data
+
+  - name: node
+    image: node:20-bookworm-slim
+    command:
+      - cat
+    tty: true
+    volumeMounts:
+      - mountPath: /home/jenkins/.npm
+        name: npm-cache
+
+  - name: buildkitd
+    image: moby/buildkit:master-rootless
+    args:
+      - --oci-worker-no-process-sandbox
+    readinessProbe:
+      exec:
+        command:
+          - buildctl
+          - debug
+          - workers
+      initialDelaySeconds: 5
+      periodSeconds: 30
+    livenessProbe:
+      exec:
+        command:
+          - buildctl
+          - debug
+          - workers
+      initialDelaySeconds: 5
+      periodSeconds: 30
+    securityContext:
+      # Needs Kubernetes >= 1.19
+      seccompProfile:
+        type: Unconfined
+      # Needs Kubernetes >= 1.30
+      appArmorProfile:
+        type: Unconfined
+      # To change UID/GID, you need to rebuild the image
+      runAsUser: 1000
+      runAsGroup: 1000
+    volumeMounts:
+      # Dockerfile has `VOLUME /home/user/.local/share/buildkit` by default too,
+      # but the default VOLUME does not work with rootless on Google's Container-Optimized OS
+      # as it is mounted with `nosuid,nodev`.
+      # https://github.com/moby/buildkit/issues/879#issuecomment-1240347038
+      - mountPath: /home/user/.local/share/buildkit
+        name: buildkitd
+
+
+  volumes:
+  - name: maven-data
+    persistentVolumeClaim:
+      claimName: maven-pvc
+  - name: golang-data
+    persistentVolumeClaim:
+      claimName: golang-pvc
+  - name: gradle-data
+    persistentVolumeClaim:
+      claimName: gradle-pvc
+  - name: buildkitd
+    emptyDir: {}
