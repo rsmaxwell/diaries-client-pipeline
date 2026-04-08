@@ -65,22 +65,6 @@ pipeline {
       }
     }
 
-    stage('build') {
-      steps {
-        container('node') {
-          dir('project/diaries-client') {
-            echo 'build the Angular Webapp'
-
-            sh('pwd')
-            sh('ls -al')
-            sh('find . -maxdepth 2 -type f | sort | head -200')
-
-            sh('./scripts/build.sh')
-          }
-        }
-      }
-    }
-
     stage('image') {
       when {
         expression { env.EFFECTIVE_PUSH_IMAGE == 'true' }
